@@ -110,10 +110,13 @@ pip install -r requirements.txt
 python build_data.py
 ```
 
-6. **Train ML models**
+6. **Train ML models** ⚠️ **REQUIRED**
 ```bash
+# This creates the cnc_predictions and quality_predictions database tables
 python src/models/train_models.py
 ```
+
+> **Important**: You must run the model training script before launching the dashboard. The training process creates essential database tables (`cnc_predictions` and `quality_predictions`) that the dashboard requires to display predictive analytics.
 
 7. **Launch the dashboard**
 ```bash
@@ -122,13 +125,36 @@ streamlit run dashboard/app.py
 
 The dashboard will open in your browser at `http://localhost:8501`
 
+### Cloud Deployment (Streamlit Cloud)
+
+For deployment on Streamlit Cloud or other hosting platforms:
+
+1. **Use the cloud-compatible version**:
+   ```bash
+   streamlit run dashboard/app_cloud.py
+   ```
+   This version loads data from CSV files instead of SQLite.
+
+2. **Ensure CSV files exist** in `data/processed/` directory:
+   - `production_data.csv`
+   - `quality_data.csv`
+   - `maintenance_data.csv`
+   - `cnc_features.csv`
+   - `quality_predictions.csv` (optional)
+
+3. **Deploy to Streamlit Cloud**:
+   - Push your repository to GitHub
+   - Connect to [Streamlit Cloud](https://streamlit.io/cloud)
+   - Set main file path to `dashboard/app_cloud.py`
+   - Ensure all CSV files are in your repository
+
 ## 📁 Project Structure
 
 ```
 medtronic-smart-manufacturing/
 ├── data/
 │   ├── raw/                    # Raw data (CNC experiments, not in git)
-│   ├── processed/              # Processed data (generated, not in git)
+│   ├── processed/              # Processed data CSVs (for cloud deployment)
 │   ├── models/                 # Trained ML models (.pkl files)
 │   └── manufacturing.db        # SQLite database (generated)
 ├── src/
@@ -140,7 +166,8 @@ medtronic-smart-manufacturing/
 │   │   └── train_models.py
 │   └── visualization/          # Visualization utilities
 ├── dashboard/
-│   └── app.py                  # Main Streamlit application (696 lines)
+│   ├── app.py                  # Main Streamlit app (SQLite-based)
+│   └── app_cloud.py            # Cloud version (CSV-based)
 ├── notebooks/                  # Jupyter notebooks for exploration
 ├── outputs/
 │   ├── reports/                # Generated reports
@@ -359,11 +386,30 @@ This is a portfolio/demo project, but suggestions and feedback are welcome!
 
 ## 🐛 Troubleshooting
 
-### Database Error
+### Database Error: Missing Tables
+```
+DatabaseError: no such table: cnc_predictions
+```
+**Solution**: You must train the ML models first to create prediction tables:
+```bash
+python src/models/train_models.py
+```
+This creates the `cnc_predictions` and `quality_predictions` tables required by the dashboard.
+
+### Database Error: Missing Production Table
 ```
 Error: no such table: production
 ```
 **Solution**: Run `python build_data.py` to create the database
+
+### Timestamp Parsing Error
+```
+ValueError: time data "2025-10-25T13:40:51.875725" doesn't match format
+```
+**Solution**: This has been fixed in the latest version. The dashboard now uses ISO8601 format parsing. Update to the latest code:
+```bash
+git pull origin main
+```
 
 ### Model Not Found
 ```
@@ -382,6 +428,13 @@ Warning: data/raw/experiment_01.csv not found
 ModuleNotFoundError: No module named 'streamlit'
 ```
 **Solution**: Activate virtual environment and run `pip install -r requirements.txt`
+
+### Cloud Deployment Issues
+If deploying to Streamlit Cloud:
+1. Use `app_cloud.py` instead of `app.py`
+2. Ensure all CSV files are in `data/processed/` directory
+3. Check that CSV files are not in `.gitignore`
+4. Verify Python version compatibility (3.12 recommended)
 
 ## 📄 License
 
