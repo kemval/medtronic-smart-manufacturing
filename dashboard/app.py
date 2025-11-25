@@ -75,10 +75,10 @@ def load_all_data():
     cnc_predictions = load_data("SELECT * FROM cnc_predictions")
     quality_predictions = load_data("SELECT * FROM quality_predictions")
     
-    # Convert date columns
-    production['timestamp'] = pd.to_datetime(production['timestamp'])
-    quality['timestamp'] = pd.to_datetime(quality['timestamp'])
-    maintenance['timestamp'] = pd.to_datetime(maintenance['timestamp'])
+    # Convert date columns (ISO8601 format)
+    production['timestamp'] = pd.to_datetime(production['timestamp'], format='ISO8601')
+    quality['timestamp'] = pd.to_datetime(quality['timestamp'], format='ISO8601')
+    maintenance['timestamp'] = pd.to_datetime(maintenance['timestamp'], format='ISO8601')
     
     return production, quality, maintenance, cnc_predictions, quality_predictions
 
