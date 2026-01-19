@@ -50,23 +50,37 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Load data from CSVs
+# Load data from SQLite database
 @st.cache_data(ttl=300)
 def load_all_data():
-    """Load all data from CSV files"""
+    """Load all data from SQLite database"""
     try:
-        data_dir = Path('data/processed')
+        import sqlite3
+        from pathlib import Path
         
-        production = pd.read_csv(data_dir / 'production_data.csv')
-        quality = pd.read_csv(data_dir / 'quality_data.csv')
-        maintenance = pd.read_csv(data_dir / 'maintenance_data.csv')
-        cnc_predictions = pd.read_csv(data_dir / 'cnc_features.csv')
-        quality_predictions = pd.read_csv(data_dir / 'quality_predictions.csv') if (data_dir / 'quality_predictions.csv').exists() else pd.DataFrame()
+        # Connect to the database
+        db_path = Path('data/manufacturing.db')
+        conn = sqlite3.connect(str(db_path))
+        
+        # Load data from database
+        production = pd.read_sql('SELECT * FROM production', conn)
+        quality = pd.read_sql('SELECT * FROM quality', conn)
+        maintenance = pd.read_sql('SELECT * FROM maintenance', conn)
+        cnc_predictions = pd.read_sql('SELECT * FROM cnc_features', conn)
+        
+        # Try to load quality predictions or create empty DataFrame if table doesn't exist
+        try:
+            quality_predictions = pd.read_sql('SELECT * FROM quality_predictions', conn)
+        except:
+            quality_predictions = pd.DataFrame()
+        
+        # Close the connection
+        conn.close()
         
         # Convert date columns
-        production['timestamp'] = pd.to_datetime(production['timestamp'], format='ISO8601')
-        quality['timestamp'] = pd.to_datetime(quality['timestamp'], format='ISO8601')
-        maintenance['timestamp'] = pd.to_datetime(maintenance['timestamp'], format='ISO8601')
+        for df in [production, quality, maintenance]:
+            if 'timestamp' in df.columns:
+                df['timestamp'] = pd.to_datetime(df['timestamp'])
         
         # Add predictions if they don't exist
         if 'maintenance_risk_score' not in cnc_predictions.columns:
@@ -74,7 +88,7 @@ def load_all_data():
             cnc_predictions['health_score'] = 100 - cnc_predictions['maintenance_risk_score']
         
         if quality_predictions.empty or 'is_anomaly' not in quality_predictions.columns:
-            quality_predictions = quality.groupby(['machine_id', 'date']).agg({
+            quality_predictions = quality.groupby(['machine_id', quality['timestamp'].dt.date]).agg({
                 'inspected_units': 'sum',
                 'defective_units': 'sum',
                 'defect_rate': 'mean'
@@ -85,8 +99,8 @@ def load_all_data():
         return production, quality, maintenance, cnc_predictions, quality_predictions
         
     except Exception as e:
-        st.error(f"Error loading data: {e}")
-        st.info("Make sure CSV files are in the data/processed/ directory")
+        st.error(f"Error loading data from database: {e}")
+        st.info("Make sure the SQLite database exists at data/manufacturing.db")
         return None, None, None, None, None
 
 # Sidebar
