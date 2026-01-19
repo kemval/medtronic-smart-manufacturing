@@ -1,19 +1,19 @@
 # Smart Manufacturing Dashboard - Requirements
-# Works for both local development and Streamlit Cloud deployment
+# Optimized for Python 3.13 on Streamlit Cloud
 
-# Dashboard (required for both)
-streamlit>=1.29.0
-pandas>=2.0.0
-numpy>=1.24.0
-plotly>=5.18.0
+# Core dependencies
+streamlit==1.32.0
+pandas==2.1.1
+numpy==1.26.0
+plotly==5.18.0
 
-# Data Science & ML (only needed for local development, but safe to include)
-scikit-learn==1.3.0
-scipy==1.11.0
+# Data Science & ML - using versions with pre-built wheels
+scikit-learn==1.4.0  # First version with Python 3.13 wheels
+scipy==1.11.4       # Latest with Python 3.13 support
 
-# Data Generation (only for local, optional)
-faker>=21.0.0
+# Data Generation
+faker==21.0.0
 
-# Visualization (optional, for local development)
-matplotlib>=3.8.0
-seaborn>=0.13.0
+# Visualization
+matplotlib==3.8.0
+seaborn==0.13.0
