@@ -1,4 +1,5 @@
 # 🏭 Smart Manufacturing Dashboard for Medtronic
+# DEMO: https://medtronic-smart-manufacturing.streamlit.app/
 
 <div align="center">
 
